@@ -55,6 +55,12 @@ echo "  Temporary directory: $TEMP_DIR"
 PACKAGE_DIR="$TEMP_DIR/Wallpaper-Setter-Bypass"
 mkdir -p "$PACKAGE_DIR"
 
+# Copy files to package directory
+echo "  Copying files:"
+cp "wallpaper_setter.ps1" "$PACKAGE_DIR/" || {
+    echo "    ERROR: Failed to copy wallpaper_setter.ps1"
+    exit 1
+}
 echo "    [OK] wallpaper_setter.ps1"
 
 cp "launcher.bat" "$PACKAGE_DIR/" || {
@@ -103,17 +109,17 @@ echo ""
 # Set GitHub Actions outputs if in CI environment
 if [ -n "${GITHUB_OUTPUT:-}" ]; then
     echo "Setting GitHub Actions outputs..."
-    {[OK] Archive created: $ZIP_NAME ($ZIP_SIZE)"
-echo ""
-
-# Set GitHub Actions outputs if in CI environment
-if [ -n "${GITHUB_OUTPUT:-}" ]; then
-    echo "Setting GitHub Actions outputs..."
     {
         echo "ZIP_FILE=$ZIP_NAME"
         echo "VERSION=$VERSION_CLEAN"
     } >> "$GITHUB_OUTPUT"
-    echo "  [OK]================================="
+    echo "  [OK] Outputs set"
+else
+    echo "Not running in GitHub Actions (GITHUB_OUTPUT not set)"
+fi
+
+echo ""
+echo "========================================"
 echo "SUCCESS: Package creation completed!"
 echo "========================================"
 echo "Output: $ZIP_NAME"
