@@ -11,14 +11,15 @@ Application PowerShell qui contourne l'interface native de Windows pour définir
 
 ## Fonctionnalités
 
-- **Support Dual Méthode** : Choisir entre la Windows API native ou la manipulation du registre
-- **Mode GUI** : Interface graphique interactive pour une sélection facile du fond d'écran
-- **Mode CLI** : Interface en ligne de commande pour l'automatisation et les scripts
-- **Mise à l'échelle d'images** : Agrandir les petites images à la résolution de l'écran avec interpolation au plus proche voisin
-- **Options d'étirement** : Choisir entre affichage centré ou étiré du fond d'écran
-- **Aperçu d'image** : Aperçu en direct de l'image sélectionnée avant application
-- **Fermeture automatique** : Option de fermeture automatique après application du fond d'écran
-- **Pas de Droits Admin** : Fonctionne sans privilèges administrateur en utilisant les méthodes basées sur le registre
+- [x] **Support Dual Méthode** : Choisir entre la Windows API native ou la manipulation du registre
+- [x] **Mode GUI** : Interface graphique interactive pour une sélection facile du fond d'écran
+- [x] **Mode GUI** : Interface graphique interactive pour une sélection facile du fond d'écran
+- [x] **Mode CLI** : Interface en ligne de commande pour l'automatisation et les scripts
+- [x] **Mise à l'échelle d'images** : Agrandir les petites images à la résolution de l'écran avec interpolation au plus proche voisin
+- [x] **Options d'étirement** : Choisir entre affichage centré ou étiré du fond d'écran
+- [x] **Aperçu d'image** : Aperçu en direct de l'image sélectionnée avant application
+- [x] **Fermeture automatique** : Option de fermeture automatique après application du fond d'écran
+- [x] **Pas de Droits Admin** : Fonctionne sans privilèges administrateur en utilisant les méthodes basées sur le registre
 
 ## Formats d'image supportés
 
@@ -52,15 +53,15 @@ Ou exécutez directement le script PowerShell :
 
 Cela ouvre une fenêtre où vous pouvez :
 
-1. Cliquer sur **Parcourir...** pour sélectionner un fichier image
+1. Cliquer sur **`Parcourir...`** pour sélectionner un fichier image
 2. Voir l'aperçu de l'image sur le côté droit
 3. Cocher les options souhaitées :
    - **Étirer pour remplir l'écran** : Étire l'image pour remplir tout l'écran
    - **Agrandir les petites images** : Agrandit les images plus petites que la résolution de votre écran
    - **Fermer après application** : Ferme automatiquement la fenêtre après la définition du fond d'écran
    - **Utiliser la méthode Registre** : Utiliser la manipulation du registre au lieu de l'API Windows native (essayer ceci si la méthode par défaut échoue)
-4. Cliquer sur **Appliquer** pour définir le fond d'écran
-5. Cliquer sur **Quitter** pour fermer sans appliquer les modifications
+4. Cliquer sur **`Appliquer`** pour définir le fond d'écran
+5. Cliquer sur **`Quitter`** pour fermer sans appliquer les modifications
 
 ### Mode CLI (Ligne de commande)
 
@@ -70,7 +71,7 @@ Utilisez la syntaxe suivante pour l'utilisation en ligne de commande :
 .\wallpaper_setter.ps1 -Path "C:\chemin\vers\image.jpg" [Options]
 ```
 
-**Options :**
+#### Options :
 
 - `-Path <chemin>` (obligatoire) : Chemin complet du fichier image
 - `-ScaleUp` : Agrandir les petites images à la résolution de l'écran
@@ -79,7 +80,7 @@ Utilisez la syntaxe suivante pour l'utilisation en ligne de commande :
 - `-UseRegistryMethod` : Utiliser la méthode de manipulation du registre au lieu de l'API native
 - `-Help` : Afficher le message d'aide
 
-**Exemples :**
+#### Exemples :
 
 Appliquer une image avec mise à l'échelle :
 
