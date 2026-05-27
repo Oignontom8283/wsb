@@ -52,6 +52,26 @@ public static class WallpaperNative {
 }
 '@
 
+function Validate-ImageFile {
+    param(
+        [string]$ImagePath
+    )
+    
+    try {
+        Write-Host "[INFO] Validating image file: $ImagePath"
+        $image = [System.Drawing.Image]::FromFile($ImagePath)
+        $imageWidth = $image.Width
+        $imageHeight = $image.Height
+        $image.Dispose()
+        
+        Write-Host "[INFO] Image validation successful: $($imageWidth)x$($imageHeight)"
+        return $true
+    } catch {
+        Write-Host "[ERROR] Invalid or corrupted image file: $($_.Exception.Message)"
+        return $false
+    }
+}
+
 function Scale-ImageUp {
     param(
         [string]$ImagePath,
@@ -188,12 +208,23 @@ function Apply-Wallpaper {
         return $false
     }
     
+    # Validate image file
+    if (-not (Validate-ImageFile -ImagePath $Path)) {
+        Write-Host "[ERROR] Image file validation failed"
+        if ($IsGUIMode) {
+            [System.Windows.Forms.MessageBox]::Show('Selected file is not a valid image or is corrupted.', 'Error', 'OK', 'Error') | Out-Null
+        }
+        return $false
+    }
+    
     $walpaperPath = $Path
+    $tempFilePath = $null
     
     if ($DoScaleUp) {
         Write-Host "[INFO] Scaling image..."
         $tempPath = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), "wallpaper_scaled_$(Get-Random).bmp")
         $walpaperPath = Scale-ImageUp -ImagePath $Path -OutputPath $tempPath
+        $tempFilePath = $tempPath
     }
     
     # Set wallpaper style in registry
@@ -232,6 +263,18 @@ function Apply-Wallpaper {
     
     if ($success) {
         Write-Host "[SUCCESS] Wallpaper applied successfully!"
+        
+        # Clean up temporary file if it was created
+        if (-not [string]::IsNullOrWhiteSpace($tempFilePath) -and (Test-Path -LiteralPath $tempFilePath)) {
+            try {
+                Write-Host "[INFO] Cleaning up temporary file: $tempFilePath"
+                Remove-Item -LiteralPath $tempFilePath -Force -ErrorAction Stop
+                Write-Host "[SUCCESS] Temporary file cleaned up"
+            } catch {
+                Write-Host "[WARNING] Could not delete temporary file: $($_.Exception.Message)"
+            }
+        }
+        
         return $true
     } else {
         Write-Host "[ERROR] Failed to apply wallpaper with all methods"
