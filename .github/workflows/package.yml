@@ -2,7 +2,7 @@ name: Package Release
 
 on:
   release:
-    types: [published, created]
+    types: [published]
 
 permissions:
   contents: write
@@ -17,7 +17,7 @@ jobs:
       
       - name: Get version from release
         id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+        run: echo "VERSION=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
       
       - name: Create ZIP package
         run: |
@@ -25,11 +25,13 @@ jobs:
           cp wallpaper_setter.ps1 Wallpaper-Setter-Bypass/
           cp launcher.bat Wallpaper-Setter-Bypass/
           cp .package/README.txt Wallpaper-Setter-Bypass/
-          zip -r Wallpaper-Setter-Bypass_v${{ steps.version.outputs.VERSION }}.zip Wallpaper-Setter-Bypass/
+          # Utilisation du tag propre pour nommer le ZIP
+          zip -r "Wallpaper-Setter-Bypass_${{ steps.version.outputs.VERSION }}.zip" Wallpaper-Setter-Bypass/
       
       - name: Upload artifact to release
         uses: softprops/action-gh-release@v2
         with:
-          files: Wallpaper-Setter-Bypass_v*.zip
+          tag_name: ${{ github.event.release.tag_name }}
+          files: Wallpaper-Setter-Bypass_*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
