@@ -13,12 +13,13 @@ Application PowerShell qui contourne l'interface native de Windows pour définir
 
 - [x] **Support Dual Méthode** : Choisir entre la Windows API native ou la manipulation du registre
 - [x] **Mode GUI** : Interface graphique interactive pour une sélection facile du fond d'écran
-- [x] **Mode GUI** : Interface graphique interactive pour une sélection facile du fond d'écran
 - [x] **Mode CLI** : Interface en ligne de commande pour l'automatisation et les scripts
+- [x] **Validation d'image** : Validation automatique pour détecter les fichiers image corrompus ou invalides
 - [x] **Mise à l'échelle d'images** : Agrandir les petites images à la résolution de l'écran avec interpolation au plus proche voisin
 - [x] **Options d'étirement** : Choisir entre affichage centré ou étiré du fond d'écran
 - [x] **Aperçu d'image** : Aperçu en direct de l'image sélectionnée avant application
 - [x] **Fermeture automatique** : Option de fermeture automatique après application du fond d'écran
+- [x] **Nettoyage automatique** : Supprime automatiquement les images temporaires agrandies après application
 - [x] **Pas de Droits Admin** : Fonctionne sans privilèges administrateur en utilisant les méthodes basées sur le registre
 
 ## Formats d'image supportés
@@ -146,7 +147,7 @@ Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser
 **L'image n'est pas appliquée ?**
 
 - Vérifiez que le chemin du fichier image est correct
-- Assurez-vous que le fichier image est dans un format supporté
+- Assurez-vous que le fichier image est dans un format supporté et non corrompu
 - Essayez d'utiliser le flag `-UseRegistryMethod` si la méthode par défaut ne fonctionne pas
 - Assurez-vous que le Registre Windows est accessible (non restreint par les stratégies de groupe)
 
@@ -164,9 +165,10 @@ L'aperçu peut ne pas se charger pour les formats non supportés. Vous pouvez to
 
 ## Notes
 
-- Les images temporaires agrandies sont stockées dans le dossier temporaire Windows et peuvent être nettoyées manuellement
+- Les images temporaires agrandies sont automatiquement nettoyées après application du fond d'écran
 - L'application stocke le chemin du fond d'écran dans votre registre utilisateur
 - Les chemins réseau (chemins UNC) sont supportés pour les fichiers image
+- Les fichiers image sont validés avant traitement pour détecter les corruptions
 
 ## Licence
 

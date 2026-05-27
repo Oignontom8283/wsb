@@ -13,12 +13,13 @@ A PowerShell application that bypasses the native Windows wallpaper settings to 
 
 - [x] **Dual Method Support**: Choose between native Windows API or registry manipulation methods
 - [x] **GUI Mode**: Interactive graphical interface for easy wallpaper selection
-- [x] **GUI Mode**: Interactive graphical interface for easy wallpaper selection
 - [x] **CLI Mode**: Command-line interface for automation and scripting
+- [x] **Image Validation**: Automatic validation to detect corrupted or invalid image files
 - [x] **Image Scaling**: Scale up small images to screen resolution using nearest-neighbor interpolation
 - [x] **Stretch Options**: Choose between centered or stretched wallpaper display
 - [x] **Image Preview**: Live preview of selected images before applying
 - [x] **Auto-Close**: Option to automatically close the application after applying wallpaper
+- [x] **Auto Cleanup**: Automatically removes temporary scaled images after wallpaper is applied
 - [x] **No Admin Required**: Works without administrator privileges using registry-based methods
 
 ## Supported Image Formats
@@ -146,7 +147,7 @@ Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser
 ### Image not applying?
 
 - Check that the image file path is correct
-- Verify the image file is in a supported format
+- Verify the image file is in a supported format and not corrupted
 - Try using the `-UseRegistryMethod` flag if the default method doesn't work
 - Ensure the Windows Registry is accessible (not restricted by group policies)
 
@@ -164,9 +165,10 @@ The preview may fail to load for unsupported formats. You can still apply the wa
 
 ## Notes
 
-- Temporary scaled images are stored in the Windows temp folder and can be cleaned up manually
+- Temporary scaled images are automatically cleaned up after wallpaper is applied
 - The application stores the wallpaper path in your user registry
 - Network paths (UNC paths) are supported for image files
+- Image files are validated before processing to detect corruption
 
 ## License
 
