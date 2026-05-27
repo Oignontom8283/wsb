@@ -44,11 +44,14 @@ cp launcher.bat "$PACKAGE_DIR/"
 cp .package/README.txt "$PACKAGE_DIR/"
 echo "✓ Files copied"
 
-# Create ZIP archive
+# Create ZIP archive in current working directory
 ZIP_NAME="Wallpaper-Setter-Bypass_v${VERSION}.zip"
-OUTPUT_DIR="${1:-.}"  # Use first argument as output dir, default to current directory
-
 echo "Creating archive: $ZIP_NAME"
+
+# Get absolute path of output directory
+OUTPUT_DIR="$(cd "${1:-.}" && pwd)"
+
+# Create ZIP from temp directory and save to output directory
 cd "$TEMP_DIR"
 zip -q -r "$ZIP_NAME" Wallpaper-Setter-Bypass/
 mv "$ZIP_NAME" "$OUTPUT_DIR/$ZIP_NAME"
