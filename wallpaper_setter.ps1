@@ -7,9 +7,11 @@ param(
     [switch]$Help
 )
 
+$AppName = "Wallpaper Setter Bypass"
+
 if ($Help -or ([string]::IsNullOrWhiteSpace($Path) -and $Help)) {
     Write-Host @"
-Wallpaper Setter PowerShell Script
+$AppName PowerShell Script
 
 Usage:
   .\wallpaper_setter.ps1 [Options]
@@ -238,7 +240,7 @@ function Apply-Wallpaper {
 }
 
 if (-not [string]::IsNullOrWhiteSpace($Path)) {
-    Write-Host "=== Wallpaper Setter - CLI Mode ===" -ForegroundColor Cyan
+    Write-Host "=== $AppName - CLI Mode ===" -ForegroundColor Cyan
     if (Apply-Wallpaper -Path $Path -DoScaleUp $ScaleUp -DoStretch $Stretch -DoCloseAfter $CloseAfter -UseRegistryMethod $UseRegistryMethod -IsGUIMode $false) {
         [System.Windows.Forms.MessageBox]::Show('Wallpaper applied successfully!', 'Success', 'OK', 'Information') | Out-Null
         if ($CloseAfter) {
@@ -250,10 +252,10 @@ if (-not [string]::IsNullOrWhiteSpace($Path)) {
 
 [System.Windows.Forms.Application]::EnableVisualStyles()
 
-Write-Host "=== Wallpaper Setter - GUI Mode ===" -ForegroundColor Cyan
+Write-Host "=== $AppName - GUI Mode ===" -ForegroundColor Cyan
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = 'Wallpaper Setter'
+$form.Text = $AppName
 $form.Size = New-Object System.Drawing.Size(800, 380)
 $form.StartPosition = 'CenterScreen'
 $form.FormBorderStyle = 'FixedDialog'
