@@ -53,15 +53,15 @@ Ou exécutez directement le script PowerShell :
 
 Cela ouvre une fenêtre où vous pouvez :
 
-1. Cliquer sur **`Parcourir...`** pour sélectionner un fichier image
+1. Cliquer sur **`Browse...`** pour sélectionner un fichier image
 2. Voir l'aperçu de l'image sur le côté droit
 3. Cocher les options souhaitées :
    - **Étirer pour remplir l'écran** : Étire l'image pour remplir tout l'écran
    - **Agrandir les petites images** : Agrandit les images plus petites que la résolution de votre écran
    - **Fermer après application** : Ferme automatiquement la fenêtre après la définition du fond d'écran
    - **Utiliser la méthode Registre** : Utiliser la manipulation du registre au lieu de l'API Windows native (essayer ceci si la méthode par défaut échoue)
-4. Cliquer sur **`Appliquer`** pour définir le fond d'écran
-5. Cliquer sur **`Quitter`** pour fermer sans appliquer les modifications
+4. Cliquer sur **`Apply`** pour définir le fond d'écran
+5. Cliquer sur **`Exit`** pour fermer sans appliquer les modifications
 
 ### Mode CLI (Ligne de commande)
 
