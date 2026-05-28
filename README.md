@@ -1,5 +1,7 @@
 # Wallpaper Setter Bypass (WSB)
 
+<img src="https://img.shields.io/badge/Target-Windows-green?style=flat" alt="Target Hardware"/>
+
 [Français](README_FR.md) | **English**
 
 A PowerShell application that bypasses the native Windows wallpaper settings to apply wallpapers directly with advanced scaling and styling options. Works without administrator privileges.
