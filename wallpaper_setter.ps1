@@ -602,7 +602,20 @@ $tooltip.ShowAlways = $false
 $tooltip.SetToolTip($browseButton, "Browse and select an image file to set as wallpaper")
 $tooltip.SetToolTip($tileRadioButton, "Display mode: Tile repeats the image across the entire screen")
 $tooltip.SetToolTip($fullscreenRadioButton, "Display mode: Full screen displays the image centered or stretched without tiling")
-$tooltip.SetToolTip($monitorComboBox, "Choose which monitor to apply the wallpaper to`nCurrent: The monitor where this window is located`nPrimary: Main system monitor`nSpanned: One image across all monitors")
+
+$defaultMonitorTooltip = "Choose which monitor to apply the wallpaper to`nCurrent: The monitor where this window is located`nPrimary: Main system monitor`nSpanned: One image across all monitors"
+$tooltip.SetToolTip($monitorComboBox, $defaultMonitorTooltip)
+
+$useRegistryCheckBox.Add_CheckedChanged({
+    if ($useRegistryCheckBox.Checked) {
+        $monitorComboBox.Enabled = $false
+        $tooltip.SetToolTip($monitorComboBox, "⚠️ Monitor selection is not supported with the Registry method (Applies globally).")
+    } else {
+        $monitorComboBox.Enabled = $true
+        $tooltip.SetToolTip($monitorComboBox, $defaultMonitorTooltip)
+    }
+})
+
 $tooltip.SetToolTip($stretchCheckBox, "When enabled: Stretches image to fill screen`nWhen disabled: Centers image on the screen (keeps aspect ratio)")
 $tooltip.SetToolTip($closeAfterCheckBox, "Automatically close the application after the wallpaper is applied")
 $tooltip.SetToolTip($useRegistryCheckBox, "Use registry method instead of Windows API (try this if the default method fails on restricted systems)")
