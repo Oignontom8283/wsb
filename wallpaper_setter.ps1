@@ -11,6 +11,33 @@
 
 $AppName = "Wallpaper Setter Bypass"
 
+# ===== UI Texts and Labels =====
+$UITexts = @{
+    AppName = "Wallpaper Setter Bypass"
+    SelectedImage = "Selected image:"
+    Browse = "Browse..."
+    TileRepeat = "Tile (repeat)"
+    FullScreen = "Full screen"
+    StretchToFill = "Stretch to fill"
+    Monitor = "Monitor:"
+    CloseAfter = "Close after applying"
+    UseRegistry = "Use Registry method"
+    Apply = "Apply"
+    Exit = "Exit"
+    Success = "Success"
+    Error = "Error"
+    Warning = "Warning"
+    WallpaperAppliedSuccess = "Wallpaper applied successfully!"
+    SelectValidImage = "Please select a valid image file."
+    InvalidOrCorruptedImage = "Selected file is not a valid image or is corrupted."
+    CouldNotLoadPreview = "Could not load preview image."
+    ApplyingWallpaper = "=== Applying Wallpaper (GUI Mode) ==="
+    MethodFailed = "Method Failed"
+    MethodFailedMessage = "SystemParametersInfo method failed. Would you like to try the Registry method?`n`nThis might work better on some systems."
+    MonitorTooltip = "Select which monitor(s) the wallpaper will be applied to"
+    MonitorRegistryWarning = "⚠️ Monitor selection is not supported with the Registry method (Applies globally)."
+}
+
 if ($Help -or ([string]::IsNullOrWhiteSpace($Path) -and $Help)) {
     Write-Host @"
 $AppName PowerShell Script
@@ -392,7 +419,7 @@ function Set-Wallpaper {
     if ([string]::IsNullOrWhiteSpace($Path) -or -not (Test-Path -LiteralPath $Path)) {
         Write-Host "[ERROR] Invalid image path"
         if ($IsGUIMode) {
-            [System.Windows.Forms.MessageBox]::Show('Please select a valid image file.', 'Error', 'OK', 'Error') | Out-Null
+            [System.Windows.Forms.MessageBox]::Show($UITexts.SelectValidImage, $UITexts.Error, 'OK', 'Error') | Out-Null
         }
         return $false
     }
@@ -401,7 +428,7 @@ function Set-Wallpaper {
     if (-not (Test-ImageFile -ImagePath $Path)) {
         Write-Host "[ERROR] Image file validation failed"
         if ($IsGUIMode) {
-            [System.Windows.Forms.MessageBox]::Show('Selected file is not a valid image or is corrupted.', 'Error', 'OK', 'Error') | Out-Null
+            [System.Windows.Forms.MessageBox]::Show($UITexts.InvalidOrCorruptedImage, $UITexts.Error, 'OK', 'Error') | Out-Null
         }
         return $false
     }
@@ -436,8 +463,8 @@ function Set-Wallpaper {
         # If native fails and we're in GUI mode, ask user to try registry method
         if (-not $success -and $IsGUIMode) {
             $result = [System.Windows.Forms.MessageBox]::Show(
-                "SystemParametersInfo method failed. Would you like to try the Registry method?`n`nThis might work better on some systems.",
-                'Method Failed',
+                $UITexts.MethodFailedMessage,
+                $UITexts.MethodFailed,
                 'YesNo',
                 'Question'
             )
@@ -460,7 +487,7 @@ function Set-Wallpaper {
 if (-not [string]::IsNullOrWhiteSpace($Path)) {
     Write-Host "=== $AppName - CLI Mode ===" -ForegroundColor Cyan
     if (Set-Wallpaper -Path $Path -DisplayMode $DisplayMode -Monitor $Monitor -DoStretch $Stretch -DoSpanned $Spanned -DoCloseAfter $CloseAfter -UseRegistryMethod $UseRegistryMethod -IsGUIMode $false) {
-        [System.Windows.Forms.MessageBox]::Show('Wallpaper applied successfully!', 'Success', 'OK', 'Information') | Out-Null
+        [System.Windows.Forms.MessageBox]::Show($UITexts.WallpaperAppliedSuccess, $UITexts.Success, 'OK', 'Information') | Out-Null
         if ($CloseAfter) {
             exit
         }
@@ -480,7 +507,7 @@ $form.FormBorderStyle = 'FixedDialog'
 $form.MaximizeBox = $false
 
 $label = New-Object System.Windows.Forms.Label
-$label.Text = 'Selected image:'
+$label.Text = $UITexts.SelectedImage
 $label.AutoSize = $true
 $label.Location = New-Object System.Drawing.Point(12, 20)
 
@@ -490,25 +517,25 @@ $pathBox.Size = New-Object System.Drawing.Size(200, 22)
 $pathBox.ReadOnly = $true
 
 $browseButton = New-Object System.Windows.Forms.Button
-$browseButton.Text = 'Browse...'
+$browseButton.Text = $UITexts.Browse
 $browseButton.Location = New-Object System.Drawing.Point(330, 14)
 $browseButton.Size = New-Object System.Drawing.Size(75, 25)
 
 # Display mode group
 $tileRadioButton = New-Object System.Windows.Forms.RadioButton
-$tileRadioButton.Text = 'Tile (repeat)'
+$tileRadioButton.Text = $UITexts.TileRepeat
 $tileRadioButton.Location = New-Object System.Drawing.Point(12, 80)
 $tileRadioButton.Size = New-Object System.Drawing.Size(150, 22)
 $tileRadioButton.Checked = $false
 
 $fullscreenRadioButton = New-Object System.Windows.Forms.RadioButton
-$fullscreenRadioButton.Text = 'Full screen'
+$fullscreenRadioButton.Text = $UITexts.FullScreen
 $fullscreenRadioButton.Location = New-Object System.Drawing.Point(12, 105)
 $fullscreenRadioButton.Size = New-Object System.Drawing.Size(150, 22)
 $fullscreenRadioButton.Checked = $true
 
 $stretchCheckBox = New-Object System.Windows.Forms.CheckBox
-$stretchCheckBox.Text = 'Stretch to fill'
+$stretchCheckBox.Text = $UITexts.StretchToFill
 $stretchCheckBox.Location = New-Object System.Drawing.Point(35, 130)
 $stretchCheckBox.Size = New-Object System.Drawing.Size(150, 22)
 $stretchCheckBox.Checked = $true
@@ -528,7 +555,7 @@ $fullscreenRadioButton.Add_CheckedChanged({
 
 # Monitor selection group
 $monitorLabel = New-Object System.Windows.Forms.Label
-$monitorLabel.Text = 'Monitor:'
+$monitorLabel.Text = $UITexts.Monitor
 $monitorLabel.AutoSize = $true
 $monitorLabel.Location = New-Object System.Drawing.Point(12, 53)
 
@@ -554,24 +581,24 @@ $monitorComboBox.Items.Add('Spanned')
 $monitorComboBox.SelectedIndex = 0
 
 $closeAfterCheckBox = New-Object System.Windows.Forms.CheckBox
-$closeAfterCheckBox.Text = 'Close after applying'
+$closeAfterCheckBox.Text = $UITexts.CloseAfter
 $closeAfterCheckBox.Location = New-Object System.Drawing.Point(12, 155)
 $closeAfterCheckBox.Size = New-Object System.Drawing.Size(150, 22)
 $closeAfterCheckBox.Checked = $true
 
 $useRegistryCheckBox = New-Object System.Windows.Forms.CheckBox
-$useRegistryCheckBox.Text = 'Use Registry method'
+$useRegistryCheckBox.Text = $UITexts.UseRegistry
 $useRegistryCheckBox.Location = New-Object System.Drawing.Point(12, 180)
 $useRegistryCheckBox.Size = New-Object System.Drawing.Size(150, 22)
 $useRegistryCheckBox.Checked = $false
 
 $applyButton = New-Object System.Windows.Forms.Button
-$applyButton.Text = 'Apply'
+$applyButton.Text = $UITexts.Apply
 $applyButton.Location = New-Object System.Drawing.Point(12, 220)
 $applyButton.Size = New-Object System.Drawing.Size(90, 30)
 
 $exitButton = New-Object System.Windows.Forms.Button
-$exitButton.Text = 'Exit'
+$exitButton.Text = $UITexts.Exit
 $exitButton.Location = New-Object System.Drawing.Point(112, 220)
 $exitButton.Size = New-Object System.Drawing.Size(90, 30)
 
@@ -598,13 +625,13 @@ $tooltip.SetToolTip($browseButton, "Browse and select an image file to set as wa
 $tooltip.SetToolTip($tileRadioButton, "Display mode: Tile repeats the image across the entire screen")
 $tooltip.SetToolTip($fullscreenRadioButton, "Display mode: Full screen displays the image centered or stretched without tiling")
 
-$defaultMonitorTooltip = "Choose which monitor to apply the wallpaper to`nCurrent: The monitor where this window is located`nPrimary: Main system monitor`nSpanned: One image across all monitors"
+$defaultMonitorTooltip = $UITexts.MonitorTooltip
 $tooltip.SetToolTip($monitorComboBox, $defaultMonitorTooltip)
 
 $useRegistryCheckBox.Add_CheckedChanged({
     if ($useRegistryCheckBox.Checked) {
         $monitorComboBox.Enabled = $false
-        $tooltip.SetToolTip($monitorComboBox, "⚠️ Monitor selection is not supported with the Registry method (Applies globally).")
+        $tooltip.SetToolTip($monitorComboBox, $UITexts.MonitorRegistryWarning)
     } else {
         $monitorComboBox.Enabled = $true
         $tooltip.SetToolTip($monitorComboBox, $defaultMonitorTooltip)
@@ -617,6 +644,7 @@ $tooltip.SetToolTip($useRegistryCheckBox, "Use registry method instead of Window
 $tooltip.SetToolTip($applyButton, "Apply the selected wallpaper with the chosen settings")
 $tooltip.SetToolTip($exitButton, "Close the application without applying changes")
 $tooltip.SetToolTip($previewBox, "Preview of the selected image")
+$tooltip.SetToolTip($previewBox, "Preview of the selected image")
 
 $browseButton.Add_Click({
     if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {
@@ -624,7 +652,7 @@ $browseButton.Add_Click({
         try {
             $previewBox.Image = [System.Drawing.Image]::FromFile($dialog.FileName)
         } catch {
-            [System.Windows.Forms.MessageBox]::Show('Could not load preview image.', 'Warning', 'OK', 'Warning') | Out-Null
+            [System.Windows.Forms.MessageBox]::Show($UITexts.CouldNotLoadPreview, $UITexts.Warning, 'OK', 'Warning') | Out-Null
         }
     }
 })
@@ -635,7 +663,7 @@ $exitButton.Add_Click({
 
 $applyButton.Add_Click({
     Write-Host ""
-    Write-Host "=== Applying Wallpaper (GUI Mode) ===" -ForegroundColor Cyan
+    Write-Host $UITexts.ApplyingWallpaper -ForegroundColor Cyan
     $selectedPath = $pathBox.Text
     
     # Determine display mode
@@ -672,7 +700,7 @@ $applyButton.Add_Click({
     }
     
     if (Set-Wallpaper -Path $selectedPath -DisplayMode $displayMode -Monitor $selectedMonitor -DoStretch $stretchCheckBox.Checked -DoSpanned $isSpanned -DoCloseAfter $closeAfterCheckBox.Checked -UseRegistryMethod $useRegistryCheckBox.Checked -IsGUIMode $true) {
-        [System.Windows.Forms.MessageBox]::Show('Wallpaper applied successfully!', 'Success', 'OK', 'Information') | Out-Null
+        [System.Windows.Forms.MessageBox]::Show($UITexts.WallpaperAppliedSuccess, $UITexts.Success, 'OK', 'Information') | Out-Null
         if ($closeAfterCheckBox.Checked) {
             $form.Close()
         }
