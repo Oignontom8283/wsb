@@ -52,7 +52,7 @@ public static class WallpaperNative {
 }
 '@
 
-function Validate-ImageFile {
+function Test-ImageFile {
     param(
         [string]$ImagePath
     )
@@ -72,7 +72,7 @@ function Validate-ImageFile {
     }
 }
 
-function Apply-WallpaperNative {
+function Set-WallpaperNative {
     param(
         [string]$Path
     )
@@ -88,7 +88,7 @@ function Apply-WallpaperNative {
     }
 }
 
-function Apply-WallpaperRegistry {
+function Set-WallpaperRegistry {
     param(
         [string]$Path,
         [string]$DisplayMode = "fullscreen"
@@ -122,7 +122,7 @@ function Apply-WallpaperRegistry {
     }
 }
 
-function Apply-Wallpaper {
+function Set-Wallpaper {
     param(
         [string]$Path,
         [string]$DisplayMode = "fullscreen",
@@ -147,7 +147,7 @@ function Apply-Wallpaper {
     }
     
     # Validate image file
-    if (-not (Validate-ImageFile -ImagePath $Path)) {
+    if (-not (Test-ImageFile -ImagePath $Path)) {
         Write-Host "[ERROR] Image file validation failed"
         if ($IsGUIMode) {
             [System.Windows.Forms.MessageBox]::Show('Selected file is not a valid image or is corrupted.', 'Error', 'OK', 'Error') | Out-Null
@@ -177,10 +177,10 @@ function Apply-Wallpaper {
     
     # Try preferred method
     if ($UseRegistryMethod) {
-        $success = Apply-WallpaperRegistry -Path $walpaperPath -DisplayMode $DisplayMode
+        $success = Set-WallpaperRegistry -Path $walpaperPath -DisplayMode $DisplayMode
     } else {
         # Try native method first
-        $success = Apply-WallpaperNative -Path $walpaperPath
+        $success = Set-WallpaperNative -Path $walpaperPath
         
         # If native fails and we're in GUI mode, ask user to try registry method
         if (-not $success -and $IsGUIMode) {
@@ -192,7 +192,7 @@ function Apply-Wallpaper {
             )
             
             if ($result -eq 'Yes') {
-                $success = Apply-WallpaperRegistry -Path $walpaperPath -DisplayMode $DisplayMode
+                $success = Set-WallpaperRegistry -Path $walpaperPath -DisplayMode $DisplayMode
             }
         }
     }
@@ -208,7 +208,7 @@ function Apply-Wallpaper {
 
 if (-not [string]::IsNullOrWhiteSpace($Path)) {
     Write-Host "=== $AppName - CLI Mode ===" -ForegroundColor Cyan
-    if (Apply-Wallpaper -Path $Path -DisplayMode $DisplayMode -DoStretch $Stretch -DoCloseAfter $CloseAfter -UseRegistryMethod $UseRegistryMethod -IsGUIMode $false) {
+    if (Set-Wallpaper -Path $Path -DisplayMode $DisplayMode -DoStretch $Stretch -DoCloseAfter $CloseAfter -UseRegistryMethod $UseRegistryMethod -IsGUIMode $false) {
         [System.Windows.Forms.MessageBox]::Show('Wallpaper applied successfully!', 'Success', 'OK', 'Information') | Out-Null
         if ($CloseAfter) {
             exit
@@ -354,7 +354,7 @@ $applyButton.Add_Click({
     # Determine display mode
     $displayMode = if ($tileRadioButton.Checked) { "tile" } else { "fullscreen" }
     
-    if (Apply-Wallpaper -Path $selectedPath -DisplayMode $displayMode -DoStretch $stretchCheckBox.Checked -DoCloseAfter $closeAfterCheckBox.Checked -UseRegistryMethod $useRegistryCheckBox.Checked -IsGUIMode $true) {
+    if (Set-Wallpaper -Path $selectedPath -DisplayMode $displayMode -DoStretch $stretchCheckBox.Checked -DoCloseAfter $closeAfterCheckBox.Checked -UseRegistryMethod $useRegistryCheckBox.Checked -IsGUIMode $true) {
         [System.Windows.Forms.MessageBox]::Show('Wallpaper applied successfully!', 'Success', 'OK', 'Information') | Out-Null
         if ($closeAfterCheckBox.Checked) {
             $form.Close()
