@@ -486,6 +486,12 @@ function Set-Wallpaper {
 
 if (-not [string]::IsNullOrWhiteSpace($Path)) {
     Write-Host "=== $AppName - CLI Mode ===" -ForegroundColor Cyan
+    
+    if ($Monitor -eq 'current') {
+        Write-Host "[ERROR] 'Current' monitor selection is not available in CLI mode." -ForegroundColor Red
+        exit 1
+    }
+
     if (Set-Wallpaper -Path $Path -DisplayMode $DisplayMode -Monitor $Monitor -DoStretch $Stretch -DoSpanned $Spanned -DoCloseAfter $CloseAfter -UseRegistryMethod $UseRegistryMethod -IsGUIMode $false) {
         [System.Windows.Forms.MessageBox]::Show($UITexts.WallpaperAppliedSuccess, $UITexts.Success, 'OK', 'Information') | Out-Null
         if ($CloseAfter) {
