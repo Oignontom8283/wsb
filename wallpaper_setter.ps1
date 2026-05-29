@@ -393,7 +393,6 @@ function Set-Wallpaper {
         [string]$Monitor = "primary",
         [bool]$DoStretch,
         [bool]$DoSpanned,
-        [bool]$DoCloseAfter,
         [bool]$UseRegistryMethod,
         [bool]$IsGUIMode = $false
     )
@@ -494,7 +493,7 @@ if (-not [string]::IsNullOrWhiteSpace($Path)) {
         exit 1
     }
 
-    if (Set-Wallpaper -Path $Path -DisplayMode $DisplayMode -Monitor $Monitor -DoStretch $Stretch -DoSpanned $Spanned -DoCloseAfter $CloseAfter -UseRegistryMethod $UseRegistryMethod -IsGUIMode $false) {
+    if (Set-Wallpaper -Path $Path -DisplayMode $DisplayMode -Monitor $Monitor -DoStretch $Stretch -DoSpanned $Spanned -UseRegistryMethod $UseRegistryMethod -IsGUIMode $false) {
         [System.Windows.Forms.MessageBox]::Show($UITexts.WallpaperAppliedSuccess, $UITexts.Success, 'OK', 'Information') | Out-Null
         if ($CloseAfter) {
             exit
@@ -588,26 +587,20 @@ $monitorComboBox.Items.Add('All')
 $monitorComboBox.Items.Add('Spanned')
 $monitorComboBox.SelectedIndex = 0
 
-$closeAfterCheckBox = New-Object System.Windows.Forms.CheckBox
-$closeAfterCheckBox.Text = $UITexts.CloseAfter
-$closeAfterCheckBox.Location = New-Object System.Drawing.Point(12, 155)
-$closeAfterCheckBox.Size = New-Object System.Drawing.Size(150, 22)
-$closeAfterCheckBox.Checked = $true
-
 $useRegistryCheckBox = New-Object System.Windows.Forms.CheckBox
 $useRegistryCheckBox.Text = $UITexts.UseRegistry
-$useRegistryCheckBox.Location = New-Object System.Drawing.Point(12, 180)
+$useRegistryCheckBox.Location = New-Object System.Drawing.Point(12, 155)
 $useRegistryCheckBox.Size = New-Object System.Drawing.Size(150, 22)
 $useRegistryCheckBox.Checked = $false
 
 $applyButton = New-Object System.Windows.Forms.Button
 $applyButton.Text = $UITexts.Apply
-$applyButton.Location = New-Object System.Drawing.Point(12, 220)
+$applyButton.Location = New-Object System.Drawing.Point(12, 195)
 $applyButton.Size = New-Object System.Drawing.Size(90, 30)
 
 $exitButton = New-Object System.Windows.Forms.Button
 $exitButton.Text = $UITexts.Exit
-$exitButton.Location = New-Object System.Drawing.Point(112, 220)
+$exitButton.Location = New-Object System.Drawing.Point(112, 195)
 $exitButton.Size = New-Object System.Drawing.Size(90, 30)
 
 $previewBox = New-Object System.Windows.Forms.PictureBox
@@ -647,7 +640,6 @@ $useRegistryCheckBox.Add_CheckedChanged({
 })
 
 $tooltip.SetToolTip($stretchCheckBox, "When enabled: Stretches image to fill screen`nWhen disabled: Centers image on the screen (keeps aspect ratio)")
-$tooltip.SetToolTip($closeAfterCheckBox, "Automatically close the application after the wallpaper is applied")
 $tooltip.SetToolTip($useRegistryCheckBox, "Use registry method instead of Windows API (try this if the default method fails on restricted systems)")
 $tooltip.SetToolTip($applyButton, "Apply the selected wallpaper with the chosen settings")
 $tooltip.SetToolTip($exitButton, "Close the application without applying changes")
@@ -707,7 +699,7 @@ $applyButton.Add_Click({
         }
     }
     
-if (Set-Wallpaper -Path $selectedPath -DisplayMode $displayMode -Monitor $selectedMonitor -DoStretch $stretchCheckBox.Checked -DoSpanned $isSpanned -DoCloseAfter $closeAfterCheckBox.Checked -UseRegistryMethod $useRegistryCheckBox.Checked -IsGUIMode $true) {
+if (Set-Wallpaper -Path $selectedPath -DisplayMode $displayMode -Monitor $selectedMonitor -DoStretch $stretchCheckBox.Checked -DoSpanned $isSpanned -UseRegistryMethod $useRegistryCheckBox.Checked -IsGUIMode $true) {
         
         # Création de la fenêtre
         $successDialog = New-Object System.Windows.Forms.Form
@@ -777,5 +769,5 @@ if (Set-Wallpaper -Path $selectedPath -DisplayMode $displayMode -Monitor $select
     }
 })
 
-$form.Controls.AddRange(@($label, $pathBox, $browseButton, $tileRadioButton, $fullscreenRadioButton, $stretchCheckBox, $closeAfterCheckBox, $useRegistryCheckBox, $monitorLabel, $monitorComboBox, $applyButton, $exitButton, $previewBox))
+$form.Controls.AddRange(@($label, $pathBox, $browseButton, $tileRadioButton, $fullscreenRadioButton, $stretchCheckBox, $useRegistryCheckBox, $monitorLabel, $monitorComboBox, $applyButton, $exitButton, $previewBox))
 $form.ShowDialog() | Out-Null
