@@ -1,6 +1,6 @@
 param(
     [string]$Path,
-    [switch]$ScaleUp,
+    [string]$DisplayMode = "fullscreen",
     [switch]$Stretch,
     [switch]$CloseAfter,
     [switch]$UseRegistryMethod,
@@ -18,8 +18,8 @@ Usage:
 
 Options:
   -Path <path>         Set the wallpaper directly (CLI mode, no GUI)
-  -ScaleUp             Scale up small images to screen resolution (nearest neighbor)
-  -Stretch             Stretch image to fill screen instead of maintaining aspect ratio
+  -DisplayMode         Display mode: 'tile' or 'fullscreen' (default: fullscreen)
+  -Stretch             Stretch image to fill screen instead of maintaining aspect ratio (for fullscreen mode)
   -CloseAfter          Close the application after applying wallpaper
   -UseRegistryMethod   Use registry manipulation method instead of SystemParametersInfo
   -Help                Show this help message
@@ -28,14 +28,14 @@ Examples:
   # Interactive GUI mode
   .\wallpaper_setter.ps1
 
-  # CLI mode - apply image directly
-  .\wallpaper_setter.ps1 -Path "C:\path\to\image.jpg" -ScaleUp -Stretch -CloseAfter
+  # CLI mode - apply image as tiled
+  .\wallpaper_setter.ps1 -Path "C:\path\to\image.jpg" -DisplayMode tile
+
+  # CLI mode - apply image fullscreen with stretch
+  .\wallpaper_setter.ps1 -Path "C:\path\to\image.jpg" -DisplayMode fullscreen -Stretch
 
   # CLI mode - apply image with registry method
   .\wallpaper_setter.ps1 -Path "C:\path\to\image.jpg" -UseRegistryMethod
-
-  # CLI mode - apply image with scaling
-  .\wallpaper_setter.ps1 -Path "C:\path\to\image.jpg" -ScaleUp
 "@
     exit
 }
@@ -72,77 +72,6 @@ function Validate-ImageFile {
     }
 }
 
-function Scale-ImageUp {
-    param(
-        [string]$ImagePath,
-        [string]$OutputPath
-    )
-    
-    try {
-        Write-Host "[INFO] Loading image: $ImagePath"
-        $originalImage = [System.Drawing.Image]::FromFile($ImagePath)
-        Write-Host "[INFO] Image dimensions: $($originalImage.Width)x$($originalImage.Height)"
-        
-        $screenWidth = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Width
-        $screenHeight = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds.Height
-        Write-Host "[INFO] Screen dimensions: $screenWidth`x$screenHeight"
-        
-        if ($originalImage.Width -ge $screenWidth -and $originalImage.Height -ge $screenHeight) {
-            Write-Host "[INFO] Image already meets screen dimensions, skipping scale"
-            $originalImage.Dispose()
-            return $ImagePath
-        }
-        
-        $scaleX = [Math]::Floor($screenWidth / $originalImage.Width)
-        $scaleY = [Math]::Floor($screenHeight / $originalImage.Height)
-        $scale = [Math]::Min($scaleX, $scaleY)
-        
-        if ($scale -lt 2) {
-            Write-Host "[INFO] Scale factor ($scale) too small, skipping scale"
-            $originalImage.Dispose()
-            return $ImagePath
-        }
-        
-        Write-Host "[INFO] Scaling image by factor: $scale`x"
-        
-        $newWidth = $originalImage.Width * $scale
-        $newHeight = $originalImage.Height * $scale
-        Write-Host "[INFO] New dimensions: $newWidth`x$newHeight"
-        
-        # Create bitmap with explicit PixelFormat
-        Write-Host "[INFO] Creating scaled bitmap..."
-        $scaledBitmap = New-Object System.Drawing.Bitmap($newWidth, $newHeight, [System.Drawing.Imaging.PixelFormat]::Format24bppRgb)
-        
-        $graphics = [System.Drawing.Graphics]::FromImage($scaledBitmap)
-        $graphics.Clear([System.Drawing.Color]::Black)
-        $graphics.CompositingMode = [System.Drawing.Drawing2D.CompositingMode]::SourceCopy
-        $graphics.CompositingQuality = [System.Drawing.Drawing2D.CompositingQuality]::HighSpeed
-        $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::NearestNeighbor
-        $graphics.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::None
-        $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::Half
-        
-        Write-Host "[INFO] Drawing scaled image..."
-        $graphics.DrawImage($originalImage, 0, 0, $newWidth, $newHeight)
-        
-        Write-Host "[INFO] Saving scaled image to: $OutputPath"
-        $encoder = [System.Drawing.Imaging.ImageCodecInfo]::GetImageEncoders() | Where-Object { $_.MimeType -eq 'image/bmp' } | Select-Object -First 1
-        $encoderParams = New-Object System.Drawing.Imaging.EncoderParameters(0)
-        $scaledBitmap.Save($OutputPath, $encoder, $encoderParams)
-        
-        $graphics.Dispose()
-        $scaledBitmap.Dispose()
-        $originalImage.Dispose()
-        
-        Write-Host "[SUCCESS] Image scaled successfully"
-        return $OutputPath
-    } catch {
-        Write-Host "[ERROR] Error scaling image: $($_.Exception.Message)"
-        Write-Host "[ERROR] Full error: $_"
-        try { $originalImage.Dispose() } catch {}
-        return $ImagePath
-    }
-}
-
 function Apply-WallpaperNative {
     param(
         [string]$Path
@@ -161,7 +90,8 @@ function Apply-WallpaperNative {
 
 function Apply-WallpaperRegistry {
     param(
-        [string]$Path
+        [string]$Path,
+        [string]$DisplayMode = "fullscreen"
     )
     
     try {
@@ -171,7 +101,15 @@ function Apply-WallpaperRegistry {
         Write-Host "[INFO] Setting wallpaper registry values..."
         $regPath = 'HKCU:\Control Panel\Desktop'
         Set-ItemProperty -Path $regPath -Name Wallpaper -Value $Path -ErrorAction Stop
-        Set-ItemProperty -Path $regPath -Name TileWallpaper -Value 0 -ErrorAction Stop
+        
+        # Set TileWallpaper based on display mode
+        if ($DisplayMode -eq "tile") {
+            Write-Host "[INFO] Setting TileWallpaper to 1 (tile mode)"
+            Set-ItemProperty -Path $regPath -Name TileWallpaper -Value 1 -ErrorAction Stop
+        } else {
+            Write-Host "[INFO] Setting TileWallpaper to 0 (no tile)"
+            Set-ItemProperty -Path $regPath -Name TileWallpaper -Value 0 -ErrorAction Stop
+        }
         
         Write-Host "[INFO] Refreshing desktop with SystemParametersInfo..."
         [WallpaperNative]::SystemParametersInfo(20, 0, $Path, 3) | Out-Null
@@ -187,7 +125,7 @@ function Apply-WallpaperRegistry {
 function Apply-Wallpaper {
     param(
         [string]$Path,
-        [bool]$DoScaleUp,
+        [string]$DisplayMode = "fullscreen",
         [bool]$DoStretch,
         [bool]$DoCloseAfter,
         [bool]$UseRegistryMethod,
@@ -196,7 +134,7 @@ function Apply-Wallpaper {
     
     Write-Host "[INFO] Applying wallpaper..."
     Write-Host "[INFO] Image path: $Path"
-    Write-Host "[INFO] Scale up: $DoScaleUp"
+    Write-Host "[INFO] Display mode: $DisplayMode"
     Write-Host "[INFO] Stretch: $DoStretch"
     Write-Host "[INFO] Use Registry Method: $UseRegistryMethod"
     
@@ -218,30 +156,28 @@ function Apply-Wallpaper {
     }
     
     $walpaperPath = $Path
-    $tempFilePath = $null
     
-    if ($DoScaleUp) {
-        Write-Host "[INFO] Scaling image..."
-        $tempPath = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), "wallpaper_scaled_$(Get-Random).bmp")
-        $walpaperPath = Scale-ImageUp -ImagePath $Path -OutputPath $tempPath
-        $tempFilePath = $tempPath
-    }
-    
-    # Set wallpaper style in registry
+    # Set wallpaper style in registry based on display mode
     Write-Host "[INFO] Setting wallpaper style..."
-    if ($DoStretch) {
+    if ($DisplayMode -eq "tile") {
+        Write-Host "[INFO] Setting style to: Tile"
+        Set-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name WallpaperStyle -Value 1
+        Set-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name TileWallpaper -Value 1
+    } elseif ($DoStretch) {
         Write-Host "[INFO] Setting style to: Stretch"
         Set-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name WallpaperStyle -Value 2
+        Set-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name TileWallpaper -Value 0
     } else {
         Write-Host "[INFO] Setting style to: Center"
         Set-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name WallpaperStyle -Value 6
+        Set-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name TileWallpaper -Value 0
     }
     
     $success = $false
     
     # Try preferred method
     if ($UseRegistryMethod) {
-        $success = Apply-WallpaperRegistry -Path $walpaperPath
+        $success = Apply-WallpaperRegistry -Path $walpaperPath -DisplayMode $DisplayMode
     } else {
         # Try native method first
         $success = Apply-WallpaperNative -Path $walpaperPath
@@ -256,25 +192,13 @@ function Apply-Wallpaper {
             )
             
             if ($result -eq 'Yes') {
-                $success = Apply-WallpaperRegistry -Path $walpaperPath
+                $success = Apply-WallpaperRegistry -Path $walpaperPath -DisplayMode $DisplayMode
             }
         }
     }
     
     if ($success) {
         Write-Host "[SUCCESS] Wallpaper applied successfully!"
-        
-        # Clean up temporary file if it was created
-        if (-not [string]::IsNullOrWhiteSpace($tempFilePath) -and (Test-Path -LiteralPath $tempFilePath)) {
-            try {
-                Write-Host "[INFO] Cleaning up temporary file: $tempFilePath"
-                Remove-Item -LiteralPath $tempFilePath -Force -ErrorAction Stop
-                Write-Host "[SUCCESS] Temporary file cleaned up"
-            } catch {
-                Write-Host "[WARNING] Could not delete temporary file: $($_.Exception.Message)"
-            }
-        }
-        
         return $true
     } else {
         Write-Host "[ERROR] Failed to apply wallpaper with all methods"
@@ -284,7 +208,7 @@ function Apply-Wallpaper {
 
 if (-not [string]::IsNullOrWhiteSpace($Path)) {
     Write-Host "=== $AppName - CLI Mode ===" -ForegroundColor Cyan
-    if (Apply-Wallpaper -Path $Path -DoScaleUp $ScaleUp -DoStretch $Stretch -DoCloseAfter $CloseAfter -UseRegistryMethod $UseRegistryMethod -IsGUIMode $false) {
+    if (Apply-Wallpaper -Path $Path -DisplayMode $DisplayMode -DoStretch $Stretch -DoCloseAfter $CloseAfter -UseRegistryMethod $UseRegistryMethod -IsGUIMode $false) {
         [System.Windows.Forms.MessageBox]::Show('Wallpaper applied successfully!', 'Success', 'OK', 'Information') | Out-Null
         if ($CloseAfter) {
             exit
@@ -299,7 +223,7 @@ Write-Host "=== $AppName - GUI Mode ===" -ForegroundColor Cyan
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = $AppName
-$form.Size = New-Object System.Drawing.Size(800, 380)
+$form.Size = New-Object System.Drawing.Size(800, 420)
 $form.StartPosition = 'CenterScreen'
 $form.FormBorderStyle = 'FixedDialog'
 $form.MaximizeBox = $false
@@ -319,38 +243,63 @@ $browseButton.Text = 'Browse...'
 $browseButton.Location = New-Object System.Drawing.Point(330, 14)
 $browseButton.Size = New-Object System.Drawing.Size(75, 25)
 
+# Display mode group
+$displayModeLabel = New-Object System.Windows.Forms.Label
+$displayModeLabel.Text = 'Display mode:'
+$displayModeLabel.AutoSize = $true
+$displayModeLabel.Location = New-Object System.Drawing.Point(12, 50)
+
+$tileRadioButton = New-Object System.Windows.Forms.RadioButton
+$tileRadioButton.Text = 'Tile (repeat)'
+$tileRadioButton.Location = New-Object System.Drawing.Point(12, 70)
+$tileRadioButton.Size = New-Object System.Drawing.Size(150, 22)
+$tileRadioButton.Checked = $false
+
+$fullscreenRadioButton = New-Object System.Windows.Forms.RadioButton
+$fullscreenRadioButton.Text = 'Full screen'
+$fullscreenRadioButton.Location = New-Object System.Drawing.Point(12, 95)
+$fullscreenRadioButton.Size = New-Object System.Drawing.Size(150, 22)
+$fullscreenRadioButton.Checked = $true
+
 $stretchCheckBox = New-Object System.Windows.Forms.CheckBox
-$stretchCheckBox.Text = 'Stretch to fill screen'
-$stretchCheckBox.Location = New-Object System.Drawing.Point(12, 50)
+$stretchCheckBox.Text = 'Stretch to fill'
+$stretchCheckBox.Location = New-Object System.Drawing.Point(35, 120)
 $stretchCheckBox.Size = New-Object System.Drawing.Size(150, 22)
 $stretchCheckBox.Checked = $false
+$stretchCheckBox.Enabled = $true
 
-$scaleUpCheckBox = New-Object System.Windows.Forms.CheckBox
-$scaleUpCheckBox.Text = 'Scale up small images'
-$scaleUpCheckBox.Location = New-Object System.Drawing.Point(12, 75)
-$scaleUpCheckBox.Size = New-Object System.Drawing.Size(150, 22)
-$scaleUpCheckBox.Checked = $false
+# Update stretch checkbox state based on radio button selection
+$tileRadioButton.Add_CheckedChanged({
+    $stretchCheckBox.Enabled = -not $tileRadioButton.Checked
+    if ($tileRadioButton.Checked) {
+        $stretchCheckBox.Checked = $false
+    }
+})
+
+$fullscreenRadioButton.Add_CheckedChanged({
+    $stretchCheckBox.Enabled = $fullscreenRadioButton.Checked
+})
 
 $closeAfterCheckBox = New-Object System.Windows.Forms.CheckBox
 $closeAfterCheckBox.Text = 'Close after applying'
-$closeAfterCheckBox.Location = New-Object System.Drawing.Point(12, 100)
+$closeAfterCheckBox.Location = New-Object System.Drawing.Point(12, 145)
 $closeAfterCheckBox.Size = New-Object System.Drawing.Size(150, 22)
 $closeAfterCheckBox.Checked = $true
 
 $useRegistryCheckBox = New-Object System.Windows.Forms.CheckBox
 $useRegistryCheckBox.Text = 'Use Registry method'
-$useRegistryCheckBox.Location = New-Object System.Drawing.Point(12, 125)
+$useRegistryCheckBox.Location = New-Object System.Drawing.Point(12, 170)
 $useRegistryCheckBox.Size = New-Object System.Drawing.Size(150, 22)
 $useRegistryCheckBox.Checked = $false
 
 $applyButton = New-Object System.Windows.Forms.Button
 $applyButton.Text = 'Apply'
-$applyButton.Location = New-Object System.Drawing.Point(12, 160)
+$applyButton.Location = New-Object System.Drawing.Point(12, 205)
 $applyButton.Size = New-Object System.Drawing.Size(90, 30)
 
 $exitButton = New-Object System.Windows.Forms.Button
 $exitButton.Text = 'Exit'
-$exitButton.Location = New-Object System.Drawing.Point(112, 160)
+$exitButton.Location = New-Object System.Drawing.Point(112, 205)
 $exitButton.Size = New-Object System.Drawing.Size(90, 30)
 
 $previewBox = New-Object System.Windows.Forms.PictureBox
@@ -383,7 +332,11 @@ $applyButton.Add_Click({
     Write-Host ""
     Write-Host "=== Applying Wallpaper (GUI Mode) ===" -ForegroundColor Cyan
     $selectedPath = $pathBox.Text
-    if (Apply-Wallpaper -Path $selectedPath -DoScaleUp $scaleUpCheckBox.Checked -DoStretch $stretchCheckBox.Checked -DoCloseAfter $closeAfterCheckBox.Checked -UseRegistryMethod $useRegistryCheckBox.Checked -IsGUIMode $true) {
+    
+    # Determine display mode
+    $displayMode = if ($tileRadioButton.Checked) { "tile" } else { "fullscreen" }
+    
+    if (Apply-Wallpaper -Path $selectedPath -DisplayMode $displayMode -DoStretch $stretchCheckBox.Checked -DoCloseAfter $closeAfterCheckBox.Checked -UseRegistryMethod $useRegistryCheckBox.Checked -IsGUIMode $true) {
         [System.Windows.Forms.MessageBox]::Show('Wallpaper applied successfully!', 'Success', 'OK', 'Information') | Out-Null
         if ($closeAfterCheckBox.Checked) {
             $form.Close()
@@ -391,5 +344,5 @@ $applyButton.Add_Click({
     }
 })
 
-$form.Controls.AddRange(@($label, $pathBox, $browseButton, $stretchCheckBox, $scaleUpCheckBox, $closeAfterCheckBox, $useRegistryCheckBox, $applyButton, $exitButton, $previewBox))
+$form.Controls.AddRange(@($label, $pathBox, $browseButton, $displayModeLabel, $tileRadioButton, $fullscreenRadioButton, $stretchCheckBox, $closeAfterCheckBox, $useRegistryCheckBox, $applyButton, $exitButton, $previewBox))
 $form.ShowDialog() | Out-Null
