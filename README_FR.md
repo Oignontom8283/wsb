@@ -188,7 +188,7 @@ Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser
 La méthode registre peut prendre un moment pour actualiser le fond d'écran. Si cela ne s'applique pas immédiatement :
 
 - Attendez quelques secondes et le fond d'écran devrait se mettre à jour
-- Essayez d'appliquer à nouveau — parfois la méthode registre nécessite plusieurs tentatives pour prendre effet
+- Essayez d'appliquer à nouveau, parfois la méthode registre nécessite plusieurs tentatives pour prendre effet
 - Utilisez le fichier launcher batch si la politique d'exécution empêche le script PowerShell de s'exécuter
 
 **L'aperçu ne se charge pas ?**

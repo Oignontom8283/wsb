@@ -183,7 +183,7 @@ Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser
 The registry method may take a moment to refresh the wallpaper. If it doesn't apply immediately:
 
 - Wait a few seconds and the wallpaper should update
-- Try applying again — sometimes the registry method requires multiple attempts to take effect
+- Try applying again, sometimes the registry method requires multiple attempts to take effect
 - Use the launcher batch file if execution policy is preventing the PowerShell script from running
 
 ### Preview not loading?
