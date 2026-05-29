@@ -17,9 +17,8 @@ Application PowerShell qui contourne l'interface native de Windows pour définir
 - [x] **Validation d'image** : Validation automatique pour détecter les fichiers image corrompus ou invalides
 - [x] **Modes d'affichage** : Choisir entre Tiler (répétition) ou Plein écran
 - [x] **Options d'étirement** : En mode plein écran, choisir entre centré ou étiré
-- [x] **Support Multimoni** : Appliquer les fonds d'écran sur des/un moniteur(s) spécifique(s) ou étendre une seule image sur tous les écrans
+- [x] **Support Multi-Moniteur** : Appliquer les fonds d'écran sur des/un moniteur(s) spécifique(s) ou étendre une seule image sur tous les écrans
 - [x] **Aperçu d'image** : Aperçu en direct de l'image sélectionnée avant application
-- [x] **Fermeture automatique** : Option de fermeture automatique après application du fond d'écran
 - [x] **Pas de Droits Admin** : Fonctionne sans privilèges administrateur en utilisant les méthodes basées sur le registre
 
 ## Formats d'image supportés
@@ -63,10 +62,10 @@ Cela ouvre une fenêtre où vous pouvez :
    - **All (Tous)** : Appliquer la même image à tous les moniteurs
    - **Spanned (Étendue)** : Étendre une seule image sur tous les moniteurs connectés
 4. Sélectionner le mode d'affichage :
-   - **Tiler (répéter)** : Répète l'image sur tout l'écran
+   - **Tile (répéter)** : Répète l'image sur tout l'écran
    - **Full screen** : Affiche l'image en plein écran
 5. En mode plein écran, cocher les options souhaitées :
-   - **Stretch to fill (Étirer l'image)** : Étire l'image pour remplir tout l'écran (sinon elle sera centrée)
+   - **Stretch to fill (Étirer l'image)** : Étire l'image pour remplir tout l'écran (sinon elle sera ajustée en conservant les proportions)
 6. Cocher les autres options :
    - **Use Registry method (Manipulation du registre)** : Utiliser la manipulation du registre au lieu de l'API Windows native (essayer ceci si la méthode par défaut échoue)
 7. Cliquer sur **`Apply`** pour définir le fond d'écran
@@ -82,11 +81,10 @@ Utilisez la syntaxe suivante pour l'utilisation en ligne de commande :
 
 #### Options :
 - `-Path <chemin>` (obligatoire) : Chemin complet du fichier image
-- `-Monitor <moniteur>` : Moniteur cible : 'primary', 'all', ou index matériel (ex: '0', '1'). Par défaut 'primary'.
-- `-Spanned` : Appliquer l'image étendue sur tous les moniteurs
 - `-DisplayMode <mode>` : Mode d'affichage : 'tile' (répétition) ou 'fullscreen' (plein écran, défaut)
+- `-Monitor <moniteur>` : Moniteur cible : 'primary', 'all', ou index (ex: '0', '1'). Par défaut 'primary'.
 - `-Stretch` : Étirer l'image pour remplir l'écran (mode plein écran uniquement)
-- `-CloseAfter` : Fermer l'application après application
+- `-Spanned` : Appliquer l'image étendue sur tous les moniteurs
 - `-UseRegistryMethod` : Utiliser la méthode de manipulation du registre au lieu de l'API native
 - `-Help` : Afficher le message d'aide
 
@@ -129,12 +127,6 @@ Appliquer une image en mode Tiler (répétition) :
 .\wallpaper_setter.ps1 -Path "C:\Users\MonUtilisateur\Images\image.jpg" -DisplayMode tile
 ```
 
-Appliquer une image avec fermeture automatique :
-
-```powershell
-.\wallpaper_setter.ps1 -Path "C:\Users\MonUtilisateur\Images\image.jpg" -DisplayMode fullscreen -Stretch -CloseAfter
-```
-
 Appliquer une image en utilisant la méthode Registre :
 
 ```powershell
@@ -146,22 +138,22 @@ Afficher l'aide :
 ```powershell
 .\wallpaper_setter.ps1 -Help
 ```
-odes d'affichage** : 
+
+## Comment ça fonctionne
+
+WSB contourne l'interface graphique Windows standard en modifiant directement la configuration du fond d'écran :
+
+1. **Mode GUI** : Lance une fenêtre interactive utilisant Windows Forms pour sélectionner et configurer les paramètres du fond d'écran
+2. **Modes d'affichage** :
    - **Tiler** : Répète l'image sur tout l'écran (WallpaperStyle=1, TileWallpaper=1)
-   - **Plein écran centré** : Affiche l'image centrée sans répétition (WallpaperStyle=6, TileWallpaper=0)
+   - **Plein écran centré** : Affiche l'image ajustée sans répétition (WallpaperStyle=6, TileWallpaper=0)
    - **Plein écran étiré** : Affiche l'image étirée pour remplir l'écran (WallpaperStyle=2, TileWallpaper=0)
 3. **Approche Dual Méthode** :
-   - **Méthode par défaut** : Utilise l'API Windows native (`SystemParametersInfo`) pour rafraîchir directement le fond d'écran
+   - **Méthode par défaut** : Utilise l'interface COM `IDesktopWallpaper` pour définir le fond d'écran par moniteur, avec repli sur `SystemParametersInfo` en cas d'échec
    - **Méthode Registre** : Manipule directement les paramètres du registre Windows :
      - `Wallpaper` : Chemin vers l'image de fond d'écran
-     - `WallpaperStyle` : 1 pour tiler, 2 pour étirer, 6 pour centrer
-     - `TileWallpaper` : 1 pour tiler, 0 pour non-tilinge est activée, l'image est agrandie en utilisant l'interpolation au plus proche voisin pour correspondre à la résolution de votre écran tout en maintenant la qualité
-3. **Approche Dual Méthode** :
-   - **Méthode par défaut** : Utilise l'API Windows native (`SystemParametersInfo`) pour rafraîchir directement le fond d'écran
-   - **Méthode Registre** : Manipule directement les paramètres du registre Windows :
-     - `Wallpaper` : Chemin vers l'image de fond d'écran
-     - `WallpaperStyle` : 2 pour étirer, 6 pour centrer
-     - `TileWallpaper` : Défini sur 0 (pas de mosaïque)
+     - `WallpaperStyle` : 1 pour tiler, 2 pour étirer, 6 pour ajusté
+     - `TileWallpaper` : 1 pour tiler, 0 pour non-tiler
 4. **Stratégie de Repli** : Si la méthode par défaut échoue en mode GUI, propose automatiquement d'essayer la méthode Registre
 5. **Actualisation du Bureau** : Déclenche l'affichage immédiat du fond d'écran sans nécessiter un redémarrage du système
 
@@ -193,7 +185,7 @@ Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser
 La méthode registre peut prendre un moment pour actualiser le fond d'écran. Si cela ne s'applique pas immédiatement :
 
 - Attendez quelques secondes et le fond d'écran devrait se mettre à jour
-- Essayez d'appliquer à nouveau - parfois la méthode registre nécessite plusieurs tentatives pour prendre effet
+- Essayez d'appliquer à nouveau — parfois la méthode registre nécessite plusieurs tentatives pour prendre effet
 - Utilisez le fichier launcher batch si la politique d'exécution empêche le script PowerShell de s'exécuter
 
 **L'aperçu ne se charge pas ?**
@@ -202,7 +194,6 @@ L'aperçu peut ne pas se charger pour les formats non supportés. Vous pouvez to
 
 ## Notes
 
-- Les images temporaires agrandies sont automatiquement nettoyées après application du fond d'écran
 - L'application stocke le chemin du fond d'écran dans votre registre utilisateur
 - Les chemins réseau (chemins UNC) sont supportés pour les fichiers image
 - Les fichiers image sont validés avant traitement pour détecter les corruptions

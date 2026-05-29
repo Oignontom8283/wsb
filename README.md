@@ -21,7 +21,6 @@ A PowerShell application that bypasses the native Windows wallpaper settings to 
 - [x] **Stretch Options**: In fullscreen mode, choose between centered or stretched display
 - [x] **Multi-Monitor Support**: Apply wallpapers to specific monitors or span a single image across all screens
 - [x] **Image Preview**: Live preview of selected images before applying
-- [x] **Auto-Close**: Option to automatically close the application after applying wallpaper
 - [x] **No Admin Required**: Works without administrator privileges using registry-based methods
 
 ## Supported Image Formats
@@ -68,9 +67,9 @@ This opens a window where you can:
    - **Tile (repeat)**: Repeats the image across the entire screen
    - **Full screen**: Displays the image in full screen
 5. In fullscreen mode, check optional options:
-   - **Stretch to fill**: Stretches the image to fill the entire screen (otherwise it will be centered)
+   - **Stretch to fill**: Stretches the image to fill the entire screen (otherwise it will be fitted while keeping aspect ratio)
 6. Check other options:
-   - **Use Registry method**: Use registry manipulation method instead of native Windows API (try this if the default method fails)
+   - **Use Registry method**: Use registry manipulation instead of native Windows API (try this if the default method fails)
 7. Click **`Apply`** to set the wallpaper
 8. Click **`Exit`** to close without applying changes
 
@@ -84,16 +83,15 @@ Use the following syntax for command-line usage:
 
 #### Options:
 - `-Path <path>` (required): Full path to the image file
-- `-Monitor <monitor>`: Target monitor: 'primary', 'all', or hardware index (e.g., '0', '1'). Defaults to 'primary'.
-- `-Spanned`: Apply as single spanned wallpaper across all monitors
 - `-DisplayMode <mode>`: Display mode: 'tile' (repeat) or 'fullscreen' (default)
+- `-Monitor <monitor>`: Target monitor: 'primary', 'all', or hardware index (e.g., '0', '1'). Defaults to 'primary'.
 - `-Stretch`: Stretch image to fill screen (fullscreen mode only)
-- `-CloseAfter`: Close the application after applying wallpaper
+- `-Spanned`: Apply as single spanned wallpaper across all monitors
 - `-UseRegistryMethod`: Use registry manipulation method instead of native API
 - `-Help`: Display help message
 
 <br>
-Note: The Registry method (which disables the monitor selection option) applies the wallpaper globally to all screens using legacy windows scaling routines.
+Note: The Registry method (which disables the monitor selection option) applies the wallpaper globally to all screens using legacy Windows scaling routines.
 <br>
 
 #### Examples:
@@ -114,37 +112,26 @@ Apply as single spanned image across all monitors:
 ```
 
 Apply an image in fullscreen centered mode:
-
 ```powershell
 .\wallpaper_setter.ps1 -Path "C:\Users\MyUser\Pictures\image.jpg" -DisplayMode fullscreen
 ```
 
 Apply an image in fullscreen stretched mode:
-
 ```powershell
 .\wallpaper_setter.ps1 -Path "C:\Users\MyUser\Pictures\image.jpg" -DisplayMode fullscreen -Stretch
 ```
 
 Apply an image in tile mode (repeat):
-
 ```powershell
 .\wallpaper_setter.ps1 -Path "C:\Users\MyUser\Pictures\image.jpg" -DisplayMode tile
 ```
 
-Apply an image with auto-close:
-
-```powershell
-.\wallpaper_setter.ps1 -Path "C:\Users\MyUser\Pictures\image.jpg" -DisplayMode fullscreen -Stretch -CloseAfter
-```
-
 Apply an image using the registry method:
-
 ```powershell
 .\wallpaper_setter.ps1 -Path "C:\Users\MyUser\Pictures\image.jpg" -UseRegistryMethod
 ```
 
 View help:
-
 ```powershell
 .\wallpaper_setter.ps1 -Help
 ```
@@ -156,13 +143,13 @@ WSB bypasses the standard Windows Settings GUI by directly modifying wallpaper c
 1. **GUI Mode**: Launches an interactive window using Windows Forms to select and configure wallpaper settings
 2. **Display Modes**:
    - **Tile**: Repeats the image across the entire screen (WallpaperStyle=1, TileWallpaper=1)
-   - **Fullscreen Centered**: Displays the image centered without repetition (WallpaperStyle=6, TileWallpaper=0)
+   - **Fullscreen Fitted**: Displays the image fitted to screen while keeping aspect ratio (WallpaperStyle=6, TileWallpaper=0)
    - **Fullscreen Stretched**: Displays the image stretched to fill the screen (WallpaperStyle=2, TileWallpaper=0)
 3. **Dual Method Approach**:
-   - **Default Method**: Uses native Windows API (`SystemParametersInfo`) for direct wallpaper refresh
+   - **Default Method**: Uses the `IDesktopWallpaper` COM interface for per-monitor wallpaper, with fallback to `SystemParametersInfo` on failure
    - **Registry Method**: Directly manipulates Windows registry settings:
      - `Wallpaper`: Path to the wallpaper image
-     - `WallpaperStyle`: 1 for tile, 2 for stretch, 6 for centered
+     - `WallpaperStyle`: 1 for tile, 2 for stretch, 6 for fitted
      - `TileWallpaper`: 1 for tiling, 0 for no tiling
 4. **Fallback Strategy**: If the default method fails in GUI mode, automatically offers to try the registry method
 5. **Desktop Refresh**: Triggers immediate wallpaper display without requiring system restart
@@ -195,7 +182,7 @@ Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser
 The registry method may take a moment to refresh the wallpaper. If it doesn't apply immediately:
 
 - Wait a few seconds and the wallpaper should update
-- Try applying again - sometimes the registry method requires multiple attempts to take effect
+- Try applying again — sometimes the registry method requires multiple attempts to take effect
 - Use the launcher batch file if execution policy is preventing the PowerShell script from running
 
 ### Preview not loading?
@@ -204,7 +191,6 @@ The preview may fail to load for unsupported formats. You can still apply the wa
 
 ## Notes
 
-- Temporary scaled images are automatically cleaned up after wallpaper is applied
 - The application stores the wallpaper path in your user registry
 - Network paths (UNC paths) are supported for image files
 - Image files are validated before processing to detect corruption
