@@ -17,6 +17,7 @@ Application PowerShell qui contourne l'interface native de Windows pour définir
 - [x] **Validation d'image** : Validation automatique pour détecter les fichiers image corrompus ou invalides
 - [x] **Modes d'affichage** : Choisir entre Tiler (répétition) ou Plein écran
 - [x] **Options d'étirement** : En mode plein écran, choisir entre centré ou étiré
+- [x] **Support Multimoni** : Appliquer les fonds d'écran sur des/un moniteur(s) spécifique(s) ou étendre une seule image sur tous les écrans
 - [x] **Aperçu d'image** : Aperçu en direct de l'image sélectionnée avant application
 - [x] **Fermeture automatique** : Option de fermeture automatique après application du fond d'écran
 - [x] **Pas de Droits Admin** : Fonctionne sans privilèges administrateur en utilisant les méthodes basées sur le registre
@@ -55,16 +56,22 @@ Cela ouvre une fenêtre où vous pouvez :
 
 1. Cliquer sur **`Browse...`** pour sélectionner un fichier image
 2. Voir l'aperçu de l'image sur le côté droit
-3. Sélectionner le mode d'affichage :
+3. Sélectionner le moniteur cible :
+   - **Actuel** : Le moniteur où se trouve la fenêtre de l'application
+   - **Principal** : Le moniteur système principal
+   - **DISPLAY#** : Moniteur spécifique par son nom matériel
+   - **Tous** : Appliquer la même image à tous les moniteurs
+   - **Étendue** : Étendre une seule image sur tous les moniteurs connectés
+4. Sélectionner le mode d'affichage :
    - **Tiler (répéter)** : Répète l'image sur tout l'écran
    - **Plein écran** : Affiche l'image en plein écran
-4. En mode plein écran, cocher les options souhaitées :
+5. En mode plein écran, cocher les options souhaitées :
    - **Étirer pour remplir** : Étire l'image pour remplir tout l'écran (sinon elle sera centrée)
-5. Cocher les autres options :
+6. Cocher les autres options :
    - **Fermer après application** : Ferme automatiquement la fenêtre après la définition du fond d'écran
    - **Utiliser la méthode Registre** : Utiliser la manipulation du registre au lieu de l'API Windows native (essayer ceci si la méthode par défaut échoue)
-6. Cliquer sur **`Apply`** pour définir le fond d'écran
-7. Cliquer sur **`Exit`** pour fermer sans appliquer les modifications
+7. Cliquer sur **`Apply`** pour définir le fond d'écran
+8. Cliquer sur **`Exit`** pour fermer sans appliquer les modifications
 
 ### Mode CLI (Ligne de commande)
 
@@ -74,16 +81,36 @@ Utilisez la syntaxe suivante pour l'utilisation en ligne de commande :
 .\wallpaper_setter.ps1 -Path "C:\chemin\vers\image.jpg" [Options]
 ```
 
-####DisplayMode <mode>` : Mode d'affichage : `tile` (répétition) ou `fullscreen` (plein écran, défaut)
-- `-Stretch` : Étirer l'image pour remplir l'écran (mode plein écran uniquement)
+#### Options :
 - `-Path <chemin>` (obligatoire) : Chemin complet du fichier image
-- `-ScaleUp` : Agrandir les petites images à la résolution de l'écran
-- `-Stretch` : Étirer l'image pour remplir l'écran au lieu de maintenir le rapport d'aspect
+- `-Monitor <moniteur>` : Moniteur cible : 'primary', 'all', ou index matériel (ex: '0', '1'). Par défaut 'primary'.
+- `-Spanned` : Appliquer l'image étendue sur tous les moniteurs
+- `-DisplayMode <mode>` : Mode d'affichage : 'tile' (répétition) ou 'fullscreen' (plein écran, défaut)
+- `-Stretch` : Étirer l'image pour remplir l'écran (mode plein écran uniquement)
 - `-CloseAfter` : Fermer l'application après application
 - `-UseRegistryMethod` : Utiliser la méthode de manipulation du registre au lieu de l'API native
 - `-Help` : Afficher le message d'aide
 
+<br>
+Note : La méthode Registre (qui désactive l'option de sélection du moniteur) applique le fond d'écran globalement sur tous les écrans en utilisant les routines de redimensionnement Windows héritées.
+<br>
+
 #### Exemples :
+
+Appliquer sur le moniteur principal :
+```powershell
+.\wallpaper_setter.ps1 -Path "C:\chemin\vers\image.jpg"
+```
+
+Appliquer sur un moniteur spécifique (ex: moniteur 1) :
+```powershell
+.\wallpaper_setter.ps1 -Path "C:\chemin\vers\image.jpg" -Monitor 1
+```
+
+Appliquer une image étendue sur tous les moniteurs :
+```powershell
+.\wallpaper_setter.ps1 -Path "C:\chemin\vers\image.jpg" -Spanned
+```
 
 Appliquer une image en mode plein écran centré :
 

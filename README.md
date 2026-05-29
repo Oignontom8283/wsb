@@ -19,6 +19,7 @@ A PowerShell application that bypasses the native Windows wallpaper settings to 
 - [x] **Image Validation**: Automatic validation to detect corrupted or invalid image files
 - [x] **Display Modes**: Choose between Tile (repeat) or Fullscreen display
 - [x] **Stretch Options**: In fullscreen mode, choose between centered or stretched display
+- [x] **Multi-Monitor Support**: Apply wallpapers to specific monitors or span a single image across all screens
 - [x] **Image Preview**: Live preview of selected images before applying
 - [x] **Auto-Close**: Option to automatically close the application after applying wallpaper
 - [x] **No Admin Required**: Works without administrator privileges using registry-based methods
@@ -57,16 +58,22 @@ This opens a window where you can:
 
 1. Click **`Browse...`** to select an image file
 2. View the image preview on the right side
-3. Select the display mode:
+3. Select the target monitor:
+   - **Current**: The monitor where the application window is located
+   - **Primary**: The main system monitor
+   - **DISPLAY#**: Specific monitor by its hardware name
+   - **All**: Apply the same image to all monitors
+   - **Spanned**: Span a single image across all connected monitors
+4. Select the display mode:
    - **Tile (repeat)**: Repeats the image across the entire screen
    - **Full screen**: Displays the image in full screen
-4. In fullscreen mode, check optional options:
+5. In fullscreen mode, check optional options:
    - **Stretch to fill**: Stretches the image to fill the entire screen (otherwise it will be centered)
-5. Check other options:
+6. Check other options:
    - **Close after applying**: Automatically closes the window after setting the wallpaper
    - **Use Registry method**: Use registry manipulation method instead of native Windows API (try this if the default method fails)
-6. Click **`Apply`** to set the wallpaper
-7. Click **`Exit`** to close without applying changes
+7. Click **`Apply`** to set the wallpaper
+8. Click **`Exit`** to close without applying changes
 
 ### CLI Mode (Command Line)
 
@@ -76,16 +83,36 @@ Use the following syntax for command-line usage:
 .\wallpaper_setter.ps1 -Path "C:\path\to\image.jpg" [Options]
 ```
 
-####DisplayMode <mode>`: Display mode: `tile` (repeat) or `fullscreen` (default)
-- `-Stretch`: Stretch image to fill screen (fullscreen mode only)
+#### Options:
 - `-Path <path>` (required): Full path to the image file
-- `-ScaleUp`: Scale up small images to screen resolution
-- `-Stretch`: Stretch image to fill screen instead of maintaining aspect ratio
+- `-Monitor <monitor>`: Target monitor: 'primary', 'all', or hardware index (e.g., '0', '1'). Defaults to 'primary'.
+- `-Spanned`: Apply as single spanned wallpaper across all monitors
+- `-DisplayMode <mode>`: Display mode: 'tile' (repeat) or 'fullscreen' (default)
+- `-Stretch`: Stretch image to fill screen (fullscreen mode only)
 - `-CloseAfter`: Close the application after applying wallpaper
 - `-UseRegistryMethod`: Use registry manipulation method instead of native API
 - `-Help`: Display help message
 
+<br>
+Note: The Registry method (which disables the monitor selection option) applies the wallpaper globally to all screens using legacy windows scaling routines.
+<br>
+
 #### Examples:
+
+Apply on primary monitor:
+```powershell
+.\wallpaper_setter.ps1 -Path "C:\path\to\image.jpg"
+```
+
+Apply on a specific monitor (e.g., monitor 1):
+```powershell
+.\wallpaper_setter.ps1 -Path "C:\path\to\image.jpg" -Monitor 1
+```
+
+Apply as single spanned image across all monitors:
+```powershell
+.\wallpaper_setter.ps1 -Path "C:\path\to\image.jpg" -Spanned
+```
 
 Apply an image in fullscreen centered mode:
 
