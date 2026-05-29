@@ -4,7 +4,6 @@
     [string]$Monitor = "primary",
     [switch]$Stretch,
     [switch]$Spanned,
-    [switch]$CloseAfter,
     [switch]$UseRegistryMethod,
     [switch]$Help
 )
@@ -20,7 +19,6 @@ $UITexts = @{
     FullScreen               = "Full screen"
     StretchToFill            = "Stretch to fill"
     Monitor                  = "Monitor:"
-    CloseAfter               = "Close after applying"
     UseRegistry              = "Use Registry method"
     Apply                    = "Apply"
     Exit                     = "Exit"
@@ -37,7 +35,6 @@ $UITexts = @{
     MonitorTooltip           = "Select which monitor(s) the wallpaper will be applied to"
     MonitorRegistryWarning   = "Warning: Monitor selection is not supported with the Registry method (Applies globally)."
     OK                       = "OK"
-    KeepClose                = "Keep close"
 }
 
 if ($Help -or ([string]::IsNullOrWhiteSpace($Path) -and $Help)) {
@@ -53,7 +50,6 @@ Options:
   -Monitor <monitor>   Target monitor: 'primary', 'all', 'index' (0, 1, 2...) (default: primary)
   -Stretch             Stretch image to fill screen (fullscreen mode only)
   -Spanned             Apply as single spanned wallpaper across all monitors
-  -CloseAfter          Close the application after applying wallpaper
   -UseRegistryMethod   Use registry manipulation method instead of SystemParametersInfo
   -Help                Show this help message
 
@@ -492,9 +488,6 @@ if (-not [string]::IsNullOrWhiteSpace($Path)) {
 
     if (Set-Wallpaper -Path $Path -DisplayMode $DisplayMode -Monitor $Monitor -DoStretch $Stretch -DoSpanned $Spanned -UseRegistryMethod $UseRegistryMethod -IsGUIMode $false) {
         [System.Windows.Forms.MessageBox]::Show($UITexts.WallpaperAppliedSuccess, $UITexts.Success, 'OK', 'Information') | Out-Null
-        if ($CloseAfter) {
-            exit
-        }
     }
     exit
 }
@@ -506,7 +499,7 @@ Write-Host "=== $AppName - GUI Mode ===" -ForegroundColor Cyan
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = $AppName
-$form.Size = New-Object System.Drawing.Size(800, 380)
+$form.Size = New-Object System.Drawing.Size(800, 360)
 $form.StartPosition = 'CenterScreen'
 $form.FormBorderStyle = 'FixedDialog'
 $form.MaximizeBox = $false
@@ -589,26 +582,19 @@ $useRegistryCheckBox.Location = New-Object System.Drawing.Point(12, 155)
 $useRegistryCheckBox.Size = New-Object System.Drawing.Size(200, 22)
 $useRegistryCheckBox.Checked = $false
 
-# FIX #3 : Ajout du checkbox "Close after applying" manquant en GUI
-$closeAfterCheckBox = New-Object System.Windows.Forms.CheckBox
-$closeAfterCheckBox.Text = $UITexts.CloseAfter
-$closeAfterCheckBox.Location = New-Object System.Drawing.Point(12, 178)
-$closeAfterCheckBox.Size = New-Object System.Drawing.Size(200, 22)
-$closeAfterCheckBox.Checked = $false
-
 $applyButton = New-Object System.Windows.Forms.Button
 $applyButton.Text = $UITexts.Apply
-$applyButton.Location = New-Object System.Drawing.Point(12, 215)
+$applyButton.Location = New-Object System.Drawing.Point(12, 185)
 $applyButton.Size = New-Object System.Drawing.Size(90, 30)
 
 $exitButton = New-Object System.Windows.Forms.Button
 $exitButton.Text = $UITexts.Exit
-$exitButton.Location = New-Object System.Drawing.Point(112, 215)
+$exitButton.Location = New-Object System.Drawing.Point(112, 185)
 $exitButton.Size = New-Object System.Drawing.Size(90, 30)
 
 $previewBox = New-Object System.Windows.Forms.PictureBox
 $previewBox.Location = New-Object System.Drawing.Point(450, 16)
-$previewBox.Size = New-Object System.Drawing.Size(330, 310)
+$previewBox.Size = New-Object System.Drawing.Size(330, 290)
 $previewBox.BorderStyle = 'FixedSingle'
 $previewBox.SizeMode = 'Zoom'
 $previewBox.BackColor = [System.Drawing.Color]::LightGray
@@ -648,7 +634,6 @@ $useRegistryCheckBox.Add_CheckedChanged({
 
 $tooltip.SetToolTip($stretchCheckBox, "When enabled: Stretches image to fill screen`nWhen disabled: Fits image on the screen (keeps aspect ratio)")
 $tooltip.SetToolTip($useRegistryCheckBox, "Use registry method instead of Windows API (try this if the default method fails on restricted systems)")
-$tooltip.SetToolTip($closeAfterCheckBox, "Automatically close the application after successfully applying the wallpaper")
 $tooltip.SetToolTip($applyButton, "Apply the selected wallpaper with the chosen settings")
 $tooltip.SetToolTip($exitButton, "Close the application without applying changes")
 # FIX #7 : Suppression du doublon tooltip sur previewBox
@@ -737,40 +722,26 @@ $applyButton.Add_Click({
         $okButton = New-Object System.Windows.Forms.Button
         $okButton.Text = $UITexts.OK
         $okButton.Size = New-Object System.Drawing.Size(85, 26)
-        $okButton.Location = New-Object System.Drawing.Point(185, 85)
+        $okButton.Location = New-Object System.Drawing.Point(275, 85)
         $okButton.FlatStyle = 'System'
-        $okButton.DialogResult = 'Yes'
-
-        $keepCloseButton = New-Object System.Windows.Forms.Button
-        $keepCloseButton.Text = $UITexts.KeepClose
-        $keepCloseButton.Size = New-Object System.Drawing.Size(85, 26)
-        $keepCloseButton.Location = New-Object System.Drawing.Point(275, 85)
-        $keepCloseButton.FlatStyle = 'System'
-        $keepCloseButton.DialogResult = 'No'
+        $okButton.DialogResult = 'OK'
 
         $successDialog.AcceptButton = $okButton
-        $successDialog.CancelButton = $keepCloseButton
+        $successDialog.CancelButton = $okButton
 
         $successDialog.Controls.Add($iconBox)
         $successDialog.Controls.Add($messageLabel)
         $successDialog.Controls.Add($okButton)
-        $successDialog.Controls.Add($keepCloseButton)
 
-        $dialogResult = $successDialog.ShowDialog()
+        $successDialog.ShowDialog() | Out-Null
         $successDialog.Dispose()
-
-        # FIX #3 : Respect du checkbox "Close after applying" en GUI
-        if ($dialogResult -eq 'Yes' -or $closeAfterCheckBox.Checked) {
-            $form.Close()
-        }
     }
 })
 
-# FIX #3 : Ajout de closeAfterCheckBox aux contrôles de la form
 $form.Controls.AddRange(@(
     $label, $pathBox, $browseButton,
     $tileRadioButton, $fullscreenRadioButton, $stretchCheckBox,
-    $useRegistryCheckBox, $closeAfterCheckBox,
+    $useRegistryCheckBox,
     $monitorLabel, $monitorComboBox,
     $applyButton, $exitButton,
     $previewBox
